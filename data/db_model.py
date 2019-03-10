@@ -34,6 +34,9 @@ class Song(Base):
     all_lyrics = Column(String)
     artist_lyrics = Column(String)
     spotify_data = relationship('Spotify', back_populates='song', cascade="all, delete-orphan")
+    repetitiveness = Column(Float)
+    rhyme = Column(Float)
+    topic = Column(Integer)
 
 class Spotify(Base):
     __tablename__ = 'spotify_song_data'
@@ -56,4 +59,4 @@ Session2 = sessionmaker(bind=engine2)
 session2 = Session2()
 
 #uncomment to create new database (will overwrite existing)
-Base.metadata.create_all(engine)
+# Base.metadata.create_all(engine)

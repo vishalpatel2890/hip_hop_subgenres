@@ -41,10 +41,10 @@ def add_albums_song_to_db(artist, list_of_missed):
             print('Print failed to commit session:', artist, album)
 
 def add_spotify_songs_to_db(session, list_of_missed):
-    songs = session.query(Song).all()
+    songs = session.query(Song).filter(Song.id >= 24548).all()
     for song in songs:
         artist = song.album.artist
-
+        # print(artist.name, song.name)
         try:
             spotify_id = get_spotify_track_id(artist.name, song.name)
             song_data = get_spotify_track_info(spotify_id)

@@ -5,7 +5,7 @@ import pandas as pd
  # songs = pd.read_csv('lyrics.csv')
 
  # spotifyapi = config.spotify_api - update spotify api before running (expires)
-spotifyapi = 'Bearer BQD8R8_7UchMhtXMmntAov_WGoRDufisnSEQ7YsOHG-F3g2hUOvnq_R2snqCSVe2UoshhlgghD6b00BLdU5WHbpBWRhlhLrZjCA-wmi-8PdPvHcZ5d9htNklxlXIJz-L0pipBs3k8FN5-3SHC_EM'
+spotifyapi = 'Bearer BQCvm1d7XCXLXiNKul2DjfobJP796aEmrvCOB8kFVuPq8AfqCm0hw5b2LJPX38_N7b_y8rS5u1aLk6iglk4D-dchf7n2vDz6j4Nj1ByHn6nKArX0-RzCEbGQoW-hV00d90k4gBQYivr1svSaEi4l'
 
 def get_spotify_track_id(artist, song):
      artist = artist.lower()
