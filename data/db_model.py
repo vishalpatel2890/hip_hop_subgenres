@@ -3,12 +3,15 @@ from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
+#create db schema/model via SQLAlchemy
 
 Base = declarative_base()
 
+#connect to database
 engine = create_engine('sqlite:///hiphop_rec.db')
-engine2 = create_engine('sqlite:///hiphop_rec1.db')
+# engine2 = create_engine('sqlite:///hiphop_rec1.db')
 
+#artists Table
 class Artist(Base):
     __tablename__ = 'artists'
     id = Column(Integer, primary_key=True)
@@ -16,6 +19,7 @@ class Artist(Base):
     decade = Column(String)
     albums = relationship('Album', back_populates='artist', cascade="all, delete-orphan")
 
+#albums Table
 class Album(Base):
     __tablename__ = 'albums'
     id = Column(Integer, primary_key=True)
@@ -25,6 +29,7 @@ class Album(Base):
     release_date = Column(DateTime)
     songs = relationship('Song', back_populates='album', cascade="all, delete-orphan")
 
+#songs Table
 class Song(Base):
     __tablename__ = 'songs'
     id = Column(Integer, primary_key=True)
@@ -38,6 +43,7 @@ class Song(Base):
     rhyme = Column(Float)
     topic = Column(Integer)
 
+#Spotify Table (contains spotify data for each song)
 class Spotify(Base):
     __tablename__ = 'spotify_song_data'
     id = Column(Integer, primary_key=True)
@@ -53,10 +59,9 @@ class Spotify(Base):
     valence =Column(Float)
     tempo =Column(Float)
 
+#initalize Session
 Session = sessionmaker(bind=engine)
 session = Session()
-Session2 = sessionmaker(bind=engine2)
-session2 = Session2()
 
 #uncomment to create new database (will overwrite existing)
 # Base.metadata.create_all(engine)

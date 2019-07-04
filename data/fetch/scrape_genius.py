@@ -6,61 +6,176 @@ import dateutil.parser
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
 
-def scrape_artists_albums(artist):
+
+def get_artist_page(artist):
+    '''
+    Open artists page on Genius.com with Selenium
+
+    Parameters
+    ----------
+    artist : string
+        artist name
+
+    Returns
+    --------
+    driver :  Selenium Driver Object
+        Driver object with artists page open
+    '''
     artist = artist.replace(" ", "-")
     artist = artist.replace(".", "")
     print(artist)
-    driver = webdriver.Chrome('./chromedriver')
-    driver.get(f"http://www.genius.com/artists/{artist}")
-    # driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-    elem = driver.find_element_by_xpath("/html/body/routable-page/ng-outlet/routable-profile-page/ng-outlet/routed-page/profile-page/div[3]/div[2]/artist-songs-and-albums/album-grid/div[2]").click()
-    selenium_html = driver.find_element_by_xpath('/html/body/div[5]/div[1]/ng-transclude/scrollable-data/div')
-    html = selenium_html.get_attribute("innerHTML")
-    soup = BeautifulSoup(html)
-    album_tags = soup.findAll('div', {'class':'mini_card-title'})
-    album_url_tag = soup.findAll('a')
-    album_list = [album.text for album in album_tags]
-    album_urls = [album['href'] for album in album_url_tag]
-    driver.close()
+    try:
+        driver = webdriver.Chrome()
+        driver.get(f"http://www.genius.com/artists/{artist}")
+        # driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        driver.find_element_by_xpath("/html/body/routable-page/ng-outlet/routable-profile-page/ng-outlet/routed-page/profile-page/div[3]/div[2]/artist-songs-and-albums/album-grid/div[2]").click()
+    except NoSuchElementException as e:
+        driver.close()
+        print ('Artist not found', e)
+        return
+    except Exception as e:
+        driver.close()
+        return (e)
+
+    return driver
+
+def get_albums(driver):
+        '''
+        Scrape urls of artist's albums pages from Genius
+
+        Parameters
+        ----------
+        driver :  Selenium Driver Object
+            Driver object with artists page open
+
+        Returns
+        --------
+        album_urls :  list
+            list of album urls associated with artist
+        '''
+        try:
+            selenium_html = driver.find_element_by_xpath('/html/body/div[5]/div[1]/ng-transclude/scrollable-data/div')
+            html = selenium_html.get_attribute("innerHTML")
+            soup = BeautifulSoup(html, features="html.parser")
+            album_tags = soup.findAll('div', {'class':'mini_card-title'})
+            album_url_tag = soup.findAll('a')
+            album_list = [album.text for album in album_tags]
+            album_urls =  [album['href'] for album in album_url_tag]
+            driver.close()
+        except Exception as e:
+            driver.close()
+            print('Error occured during scrape')
+            return (e)
+        if len(album_urls) > 0:
+            return album_urls
+        else:
+            print('No Albums Scraped')
+            return
+
+def get_artist_albums(artist):
+    '''
+    Controller function to get all urls of artist's album pages
+
+    Parameters
+    ----------
+    artist : string
+        artists name
+
+    Returns
+    --------
+    album_urls :  list
+        list of album urls associated with artist
+    '''
+    album_urls = get_albums(get_artist_page(artist))
     return album_urls
 
 def scrape_album_data(album_url):
-    req = requests.get(album_url)
-    html = BeautifulSoup(req.content, 'html.parser')
-    release_date = html.find('div', {'class': 'metadata_unit'})
-    release_text = (release_date.text)[9:]
-    release_date_obj = dateutil.parser.parse(release_text)
-    album_name = html.find('h1', {'class': 'header_with_cover_art-primary_info-title header_with_cover_art-primary_info-title--white'}).text
+    '''
+    Scrape album name and release date
 
-    return({'album_name': album_name, 'release_date': release_date_obj})
+    Parameters
+    ----------
+    album_url : string
+        genius album url
+
+    Returns
+    --------
+    album_feat :  dict
+        dictionary with keys 'album_name', 'release_date'
+    '''
+    try:
+        req = requests.get(album_url)
+        html = BeautifulSoup(req.content, 'html.parser')
+        release_date = html.find('div', {'class': 'metadata_unit'})
+        release_text = (release_date.text)[9:]
+        release_date_obj = dateutil.parser.parse(release_text)
+        album_name = html.find('h1', {'class': 'header_with_cover_art-primary_info-title header_with_cover_art-primary_info-title--white'}).text
+        album_feat = {'album_name': album_name, 'release_date': release_date_obj}
+    except Exception as e:
+        print(f"Failed to get album data for {album_url}")
+        return
+    return album_feat
 
 #function to scrape song names, artists featured on song, song url
 def scrape_album_songs(artist, album_url):
-    #request, parse html
-    req = requests.get(album_url)
-    html = BeautifulSoup(req.content, 'html.parser')
-    #find all song names
-    song_names = html.findAll('h3', {'class': "chart_row-content-title"})
-    #find all song urls (for scraping lyrics)
-    song_urls = html.findAll('a', {'class': 'u-display_block'})
-    #list of song urls
-    song_urls = [song['href'] for song in song_urls]
-    #list of song names from HTML - includes featured artists
-    song_names = [song.text for song in song_names]
-    #cleanup song text - separate title and artists featured on track - returns (song_name, list of features)
-    song_names = [(clean_song_name(song)) for song in song_names]
-    #zip together (song_name, features) with song_url
-    lyrics = [scrape_lyrics(url, artist) for url in song_urls]
-    songs = list(zip(song_names, lyrics))
+    '''
+    Scrape and clean all song lyrics for each album
+
+    Parameters
+    ----------
+    artist : string
+        artist name
+    album_url : String
+        genius album url
+
+    Returns
+    --------
+    songs :  list
+        list of dictionaries - each dictionary is one song with keys 'artist',
+        'name', 'all_lyrics', 'artist_lyrics',
+    '''
+    try:
+        #request, parse html
+        req = requests.get(album_url)
+        html = BeautifulSoup(req.content, 'html.parser')
+        #find all song names
+        song_names = html.findAll('h3', {'class': "chart_row-content-title"})
+        #find all song urls (for scraping lyrics)
+        song_urls = html.findAll('a', {'class': 'u-display_block'})
+        #list of song urls
+        song_urls = [song['href'] for song in song_urls]
+        #list of song names from HTML - includes featured artists
+        song_names = [song.text for song in song_names]
+        #cleanup song text - separate title and artists featured on track - returns (song_name, list of features)
+        song_names = [(clean_song_name(song)) for song in song_names]
+        #zip together (song_name, features) with song_url
+        lyrics = [scrape_lyrics(url, artist) for url in song_urls]
+        songs = list(zip(song_names, lyrics))
+    except Exception as e:
+        print(f'failed to capure album : {album_url}')
+        return
 
     #final list of artist, song_name, features, song_url
     songs = [{'artist': artist, 'name': song[0], 'all_lyrics': song[1]['all_lyrics'], 'artist_lyrics': song[1]['artist_lyrics']} for song in songs]
 
     return songs
 
-#function to clean HTML text from song name
 def clean_song_name(song):
+    '''
+    Clean up song name string
+
+    Parameters
+    ----------
+    song : string
+        song name as scrape from genius
+
+    Returns
+    --------
+    song :  string
+        song name without extraneous text
+    '''
     features = None
     #clean new lines characters, Lyrics text, and Ft. text
     regex_first = re.compile('^(\n)( )*')
@@ -78,8 +193,24 @@ def clean_song_name(song):
 
     return song
 
-#function to scrape lyrics into a csv
+#function to scrape lyrics from song page
 def scrape_lyrics(url, artist):
+    '''
+    Scrape and clean song lyrics for song. Also, separate artists lyrics from
+    featured artists lyrics
+
+    Parameters
+    ----------
+    url : string
+        song url
+    artist : String
+        artist name
+
+    Returns
+    --------
+    lyrics :  dict
+        dictionary with cleaned lyrics with keys 'all_lyrics', 'artist_lyrics'
+    '''
     #request lyric page url
     req = requests.get(url)
     html = BeautifulSoup(req.content, 'html.parser')
@@ -96,10 +227,26 @@ def scrape_lyrics(url, artist):
     artist_lyrics = just_artist_lyrics(verses, artist)
     #join lyrics into str
     all_verses_str = ' '.join(all_verses)
-    #row to write to csv
-    return {'all_lyrics':all_verses_str, 'artist_lyrics': artist_lyrics}
+    lyrics = {'all_lyrics':all_verses_str, 'artist_lyrics': artist_lyrics}
+    return lyrics
 
 def just_artist_lyrics(lines, artist):
+    '''
+    Isolate artist lyrics from other lyrics
+
+    Parameters
+    ----------
+    lines : list
+        list of song lyrics, each element is a verse
+    artist: string
+        artist name
+
+
+    Returns
+    --------
+    artist_lines_str :  string
+        song lyrics sung by passed in artist
+    '''
     #script to run to get just main artist lines
     artist_pattern = r"(\[)+(.*)" + re.escape(artist) + r"(.*)(\])+"
     #find index of attributions just to artist
