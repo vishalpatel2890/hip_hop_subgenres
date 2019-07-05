@@ -1,6 +1,4 @@
-from db_model import *
-
-
+from data.db_model import *
 
 # fuzz is used to compare TWO strings
 from fuzzywuzzy import fuzz
@@ -8,8 +6,15 @@ from fuzzywuzzy import fuzz
 # process is used to compare a string to MULTIPLE other strings
 from fuzzywuzzy import process
 
+def delete_non_songs(session):
+    '''
+    Delete non songs (mixes, skits, etc.) from database
 
-def delete_non_songs():
+    Parameters
+    ----------
+    session : SQLAlchemy session object
+
+    '''
     songs_art = session.query(Song).filter(Song.name.contains('Album Art')).all()
     songs_credit = session.query(Song).filter(Song.name.contains('Credits')).all()
     songs_book = session.query(Song).filter(Song.name.contains('Booklet')).all()
@@ -27,12 +32,15 @@ def delete_non_songs():
             session.delete(song)
             session.commit()
 
+def get_duplcates(session, artist_id):
+    all_duplicates = []
+    artist_songs = [(y.name, y.id) for x in session.query(Artist).filter(Artist.id == 67).all()[0].albums for y in x.songs]
+    df=df_songs_merged[df_songs_merged['artist_id']== row['artist_id']]
 
-def get_duplicates(df_songs_merged):
+def get_duplicates_old(session, df_songs_merged):
     all_duplicates = []
     for idx, row in df_songs_merged.iterrows():
         df=df_songs_merged[df_songs_merged['artist_id']== row['artist_id']]
-        print(idx)
         duplicate_prob = process.extract(row['name_x'], df['name_x'], scorer=fuzz.ratio)
         search = [dup[0] for dup in duplicate_prob if dup[1] > 80]
     if len(search) > 1:
@@ -60,7 +68,7 @@ def get_duplicates(df_songs_merged):
         return all_duplicates
 
 def remove_duplicates(list_duplicates):
-    for i in all_duplicates:
+    for i in list_duplicates:
         for song in i[1:]:
             try:
                 delete = session.query(Song).filter(Song.id == song[2])[0]

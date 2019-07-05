@@ -74,7 +74,7 @@ def get_albums(driver):
             print('No Albums Scraped')
             return
 
-def get_artist_albums(artist):
+def scrape_artists_albums(artist):
     '''
     Controller function to get all urls of artist's album pages
 
@@ -154,7 +154,7 @@ def scrape_album_songs(artist, album_url):
         lyrics = [scrape_lyrics(url, artist) for url in song_urls]
         songs = list(zip(song_names, lyrics))
     except Exception as e:
-        print(f'failed to capure album : {album_url}')
+        print(f'failed to scrape album : {album_url}', e)
         return
 
     #final list of artist, song_name, features, song_url
