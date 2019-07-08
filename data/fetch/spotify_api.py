@@ -42,12 +42,23 @@ def get_spotify_track_id(artist, song):
     return id
 
 def get_spotify_track_info(id):
-    
-     url = f'https://api.spotify.com/v1/audio-features/{id}'
+    '''
+    Open artists page on Genius.com with Selenium
 
-     headers = {"Authorization": f'{spotifyapi}',
-                 "Accept": "application/json", "Content-Type": "application/json"}
-     req = requests.get(url, headers=headers)
-     json = req.json()
+    Parameters
+    ----------
+    id :  id
+        spotify id of song
+    Returns
+    --------
+    features :  json object
+        json object containing spotify audio features of given  song
+    '''
+    url = f'https://api.spotify.com/v1/audio-features/{id}'
 
-     return(json)
+    headers = {"Authorization": f'{spotifyapi}',
+             "Accept": "application/json", "Content-Type": "application/json"}
+    req = requests.get(url, headers=headers)
+    features = req.json()
+
+    return(features)
