@@ -9,7 +9,17 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 
 
-def delete_non_songs():
+def delete_non_songs(session):
+    '''
+    Delete "non-songs" : artifacts scraped that do not contain lyrics
+
+    Parameters
+    ----------
+    session : SQLAlchemy Session Object
+        SQLAlchemy session object containing current session with  connection to
+        database
+    '''
+
     songs_art = session.query(Song).filter(Song.name.contains('Album Art')).all()
     songs_credit = session.query(Song).filter(Song.name.contains('Credits')).all()
     songs_book = session.query(Song).filter(Song.name.contains('Booklet')).all()

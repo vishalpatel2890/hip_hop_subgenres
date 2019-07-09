@@ -9,7 +9,7 @@ spotifyapi = 'Bearer BQCvm1d7XCXLXiNKul2DjfobJP796aEmrvCOB8kFVuPq8AfqCm0hw5b2LJP
 
 def get_spotify_track_id(artist, song):
     '''
-    Open artists page on Genius.com with Selenium
+    Get spotify track id (unique identifier) given an artist name and song name
 
     Parameters
     ----------
@@ -43,7 +43,8 @@ def get_spotify_track_id(artist, song):
 
 def get_spotify_track_info(id):
     '''
-    Open artists page on Genius.com with Selenium
+    Get audio features of a song on spotify given an id, this may return nothing
+    if the song is not in Spotify's catalog
 
     Parameters
     ----------
