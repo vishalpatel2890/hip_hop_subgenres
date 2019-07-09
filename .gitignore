@@ -1,10 +1,12 @@
 /data/hiphop_rec.db
-/data/.DS_Store
 /data/.ipynb_checkpoints
 /data/__pycache__
 
 /fetch/__pycache__
 
 /feature_eng/__pycache__
+
+/visuals/__pycache__
+/visuals/.ipynb_checkpoints
 
 .DS_Store
