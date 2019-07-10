@@ -39,15 +39,31 @@ def delete_non_songs(session):
 
 
 def get_duplicates(session, artist_id):
+    '''
+    Generate list of duplicated songs (filtered by song name and artist name).
+    List does not contain first instance of that song only following duplicates
+
+    Parameters
+    ----------
+    session : SQLAlchemy Session Object
+        SQLAlchemy session object containing current session with  connection to
+        database
+    artist_id : integer
+        artist unique id in database
+
+    Returns
+    --------
+    all_duplicates : list
+        list of song objects (SQLAlchemy) that are duplicates and need to be
+        deleted
+    '''
     all_duplicates = []
-    test = []
     artist_object = session.query(Artist).filter(Artist.id == artist_id).all()[0]
     artist_songs = [song for album in artist_object.albums for song in album.songs]
     artist_song_names = [song.name for song in artist_songs]
     for name in artist_song_names:
         duplicate_prob = process.extract(name, artist_song_names, scorer=fuzz.ratio)
         likely_duplicate = [dup[0] for dup in duplicate_prob[1:] if dup[1] > 80]
-        test.append(likely_duplicate)
         if len(likely_duplicate) > 0:
             duplicated_songs = []
 
