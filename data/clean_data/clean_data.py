@@ -58,12 +58,26 @@ def get_duplicates(session, artist_id):
         deleted
     '''
     all_duplicates = []
+    #query artist by id
     artist_object = session.query(Artist).filter(Artist.id == artist_id).all()[0]
+
+    #get all associated song objects from artist object
     artist_songs = [song for album in artist_object.albums for song in album.songs]
     artist_song_names = [song.name for song in artist_songs]
+
+    #use fuzzywuzzy to check for duplicates
     for name in artist_song_names:
+        #process.extract takes a string and list of strings and returns all
+        #elements that match first string with high probability of it being a
+        #duplicate
         duplicate_prob = process.extract(name, artist_song_names, scorer=fuzz.ratio)
+        #filter out matches with greater than 80% probability of being a match
+        #this allows us to check for songs with slight irregularities in the song
+        #name - certain tags are added to the name depending on the album it was
+        #released on
         likely_duplicate = [dup[0] for dup in duplicate_prob[1:] if dup[1] > 80]
+
+        #get song objects that match duplicates to eventually delete
         if len(likely_duplicate) > 0:
             duplicated_songs = []
 
@@ -72,6 +86,8 @@ def get_duplicates(session, artist_id):
                 Song.name == duplicate,
                 Song.album.has(artist = artist_object)))[0]
 
+                #remove song name from list of songs so it does not need to be
+                #searched for 
                 artist_song_names.remove(duplicate)
 
                 all_duplicates.append(song_object)
