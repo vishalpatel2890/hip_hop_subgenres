@@ -38,36 +38,28 @@ def delete_non_songs(session):
             session.commit()
 
 
-def get_duplicates(df_songs_merged):
+def get_duplicates(session, artist_id):
     all_duplicates = []
-    for idx, row in df_songs_merged.iterrows():
-        df=df_songs_merged[df_songs_merged['artist_id']== row['artist_id']]
-        print(idx)
-        duplicate_prob = process.extract(row['name_x'], df['name_x'], scorer=fuzz.ratio)
-        search = [dup[0] for dup in duplicate_prob if dup[1] > 80]
-    if len(search) > 1:
-        songs = []
-        for song in search:
-            songs.append(session.query(Song).filter(Song.name == song)[0].id)
-        if len(set(songs))==1:
-            duplicates = []
-            for idx, song in enumerate(songs):
-                song_name = session.query(Song).filter(Song.id == song)[0].name
-                query = session.query(Song).filter(Song.name == song_name)[idx]
-                id = query.id
-                name = query.name
-                artist = query.album.artist.name
-                duplicates.append((name, artist, id))
-            all_duplicates.append(duplicates)
-        else:
-            duplicates = []
-            for song in songs:
-                query = session.query(Song).filter(Song.id == song)[0]
-                artist = query.album.artist.name
-                name = query.name
-                duplicates.append((name, artist, song))
-            all_duplicates.append(duplicates)
-        return all_duplicates
+    test = []
+    artist_object = session.query(Artist).filter(Artist.id == artist_id).all()[0]
+    artist_songs = [song for album in artist_object.albums for song in album.songs]
+    artist_song_names = [song.name for song in artist_songs]
+    for name in artist_song_names:
+        duplicate_prob = process.extract(name, artist_song_names, scorer=fuzz.ratio)
+        likely_duplicate = [dup[0] for dup in duplicate_prob[1:] if dup[1] > 80]
+        test.append(likely_duplicate)
+        if len(likely_duplicate) > 0:
+            duplicated_songs = []
+
+            for duplicate in likely_duplicate:
+                song_object = session.query(Song).filter(and_(
+                Song.name == duplicate,
+                Song.album.has(artist = artist_object)))[0]
+
+                artist_song_names.remove(duplicate)
+
+                all_duplicates.append(song_object)
+    return all_duplicates
 
 def remove_duplicates(list_duplicates):
     for i in all_duplicates:
