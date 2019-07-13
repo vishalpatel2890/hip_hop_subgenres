@@ -1,3 +1,12 @@
-topic_models/mallet-2.0.8/
+/data/hiphop_rec.db
+/data/.ipynb_checkpoints
+/data/__pycache__
 
-*.db
+/fetch/__pycache__
+
+/feature_eng/__pycache__
+
+/visuals/__pycache__
+/visuals/.ipynb_checkpoints
+
+.DS_Store
