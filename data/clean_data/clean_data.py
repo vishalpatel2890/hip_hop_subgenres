@@ -1,5 +1,3 @@
-from data.db_model import *
-
 # fuzz is used to compare TWO strings
 from fuzzywuzzy import fuzz
 
@@ -32,7 +30,7 @@ def delete_non_songs(session):
             session.delete(song)
             session.commit()
 
-def get_duplcates(session, artist_id):
+def get_duplcates(session, artist_id, Artist):
     all_duplicates = []
     artist_songs = [(y.name, y.id) for x in session.query(Artist).filter(Artist.id == 67).all()[0].albums for y in x.songs]
     df=df_songs_merged[df_songs_merged['artist_id']== row['artist_id']]
