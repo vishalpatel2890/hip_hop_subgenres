@@ -6,6 +6,24 @@ Hip hop music has been evolving constantly since its inception in the early 1980
  
 Lyrical data for every song of for over 150 hip hop artists over the past four decades was scraped from [Genius](http://genius.com). Spotify has developed a series of audio features for every song in their library including danceability, valence, energy, tempo, loudness, speechiness, instrumentalness, liveness, acousticness. Spotify has been these features available through their API and for each song song scraped I collected these features. 
  
-After removing duplicates, instrumental songs, skits, and songs which didn't have audio features (because they were not in Spotify's library) we were left with ~25,000 songs for our analysis. 
+After removing duplicates, instrumental songs, skits, and songs which didn't have audio features (because they were not in Spotify's library) I was left with ~25,000 songs for my analysis. 
+
+## Generating Lyrical Features
+
+### Rhyming Score
+
+### Repetitiveness
+
+## EDA 
+
+## Clustering
+
+## Next Steps 
+
+- Expand dataset by scraping/fetching additional songs
+  - Set up distributed scraping services using AWS ECS/EC2
+  - Schedule service to update for new artists/albums 
+- Dashboard to view subsets of data 
+- Fine tune clustering and try different algorithms and explore properties of the clusters
  
  
