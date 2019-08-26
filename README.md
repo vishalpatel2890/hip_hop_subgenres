@@ -20,6 +20,7 @@ After removing duplicates, instrumental songs, skits, and songs which didn't hav
 
 ## Next Steps 
 
+- Improve rhyming algorithm
 - Expand dataset by scraping/fetching additional songs
   - Set up distributed scraping services using AWS ECS/EC2
   - Schedule service to update for new artists/albums 
